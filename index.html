@@ -5,7 +5,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Seif Mansour</title>
-  <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
@@ -20,7 +19,6 @@
     }
   </script>
 
-  <script type="module" src="avatar.js"></script>
 </head>
 
 <body>
@@ -113,7 +111,7 @@ body {
   
     </style>
     <script>
-        import * as THREE from 'three';
+import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -121,7 +119,7 @@ window.onload = () => loadModel();
 
 function loadModel() {
   const loader = new GLTFLoader();
-  loader.load('./avatar.glb',
+  loader.load('avatar.glb',
     (gltf) => {
       setupScene(gltf);
       document.getElementById('avatar-loading').style.display = 'none';
