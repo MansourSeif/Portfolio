@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seif Mansour</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@v0.158.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@v0.158.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module" src="avatar.js"></script>
+</head>
+
+<body>
+    <style>
+        
+/* General styles */
+body {
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+    margin: 0;
+    background: linear-gradient(0deg, #080808, #1f1e28);
+    min-height: 100vh;
+  }
+  
+  /* Header & Navigation styles */
+  header {
+    padding: 10px 0px;
+    text-align: right;
+  }
+  
+  nav ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  nav ul li {
+    display: inline;
+    margin: 0 30px;
+  }
+  
+  nav ul li a {
+    color: #919090;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-weight: 100;
+    font-size: 1.5em;
+  }
+  
+  /* Section styles */
+  section {
+    padding: 20px;
+    text-align: center;
+  }
+  
+  h1 {
+    font-size: 4em;
+    padding: 0;
+    margin: 0;
+    font-weight: 500;
+  }
+  
+  p {
+    margin-top: 30px;
+    font-size: 3em;
+    font-weight: 100;
+    color: rgb(163, 163, 163);
+  }
+  
+  .content {
+    max-width: 1200px;
+    margin: auto;
+    padding: 16px 48px;
+  }
+  
+  .hero {
+    padding-top: 60px;
+    display: flex;
+    flex-direction: row;
+    text-align: left;
+  }
+  
+  .gradient-text {
+    background-image: linear-gradient(-45deg, rgb(177, 8, 189), rgb(88, 186, 255));
+    background-clip: text;
+    color: transparent;
+  }
+  
+  #avatar-container {
+    height: 500px;
+    margin-top: 32px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #avatar-loading {
+    font-size: 3em;
+  }
+  
+    </style>
+    <script>
+        import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+window.onload = () => loadModel();
+
+function loadModel() {
+  const loader = new GLTFLoader();
+  loader.load('./avatar.glb',
+    (gltf) => {
+      setupScene(gltf);
+      document.getElementById('avatar-loading').style.display = 'none';
+    }, 
+    (xhr) => {
+      const percentCompletion = Math.round((xhr.loaded / xhr.total) * 100);
+      document.getElementById('avatar-loading').innerText = `LOADING... ${percentCompletion}%`
+      console.log(`Loading model... ${percentCompletion}%`);
+    }, 
+    (error) => {
+      console.log(error);
+    }
+  );
+}
+
+function setupScene(gltf) {
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      alpha: true 
+    });
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    
+    const container = document.getElementById('avatar-container');
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    container.appendChild(renderer.domElement);
+
+    // Camera setup
+    const camera = new THREE.PerspectiveCamera(
+      45, container.clientWidth / container.clientHeight);
+    camera.position.set(0.2, 0.5, 1);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.enablePan = false;
+    controls.enableZoom = false;
+    controls.minDistance = 3;
+    controls.minPolarAngle = 1.4;
+    controls.maxPolarAngle = 1.4;
+    controls.target = new THREE.Vector3(0, 0.75, 0);
+    controls.update();
+
+    // Scene setup
+    const scene = new THREE.Scene();
+
+    // Lighting setup
+    scene.add(new THREE.AmbientLight());
+
+    const spotlight = new THREE.SpotLight(0xffffff, 20, 8, 1);
+    spotlight.penumbra = 0.5;
+    spotlight.position.set(0, 4, 2);
+    spotlight.castShadow = true;
+    scene.add(spotlight);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2);
+    keyLight.position.set(1, 1, 2);
+    keyLight.lookAt(new THREE.Vector3());
+    scene.add(keyLight);
+
+    // Load avatar
+    const avatar = gltf.scene;
+    avatar.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+    scene.add(avatar);
+
+    // Create pedestal
+    const groundGeometry = new THREE.CylinderGeometry(0.6, 0.6, 0.1, 64);
+    const groundMaterial = new THREE.MeshStandardMaterial();
+    const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
+    groundMesh.castShadow = false;
+    groundMesh.receiveShadow = true;
+    groundMesh.position.y -= 0.05;
+    scene.add(groundMesh);
+
+    // Load animations
+    const mixer = new THREE.AnimationMixer(avatar);
+    const clips = gltf.animations;
+    const boxingClip = THREE.AnimationClip.findByName(clips, 'boxing');
+    const kickingClip = THREE.AnimationClip.findByName(clips, 'mma kick');
+    const boxingAction = mixer.clipAction(boxingClip);
+    const kickingAction = mixer.clipAction(kickingClip);
+
+    let isKicking = false;
+    const raycaster = new THREE.Raycaster();
+    container.addEventListener('mousedown', (ev) => {
+      const coords = {
+        x: (ev.offsetX / container.clientWidth) * 2 - 1,
+        y: -(ev.offsetY / container.clientHeight) * 2 + 1
+      };
+
+      raycaster.setFromCamera(coords, camera);
+      const intersections = raycaster.intersectObject(avatar);
+  
+      if (intersections.length > 0) {
+        if (isKicking) return;
+
+        isKicking = true;
+        kickingAction.reset();
+        kickingAction.play();
+        boxingAction.crossFadeTo(kickingAction, 0.3);
+
+        setTimeout(() => {
+          boxingAction.reset();
+          boxingAction.play();
+          kickingAction.crossFadeTo(boxingAction, 1);
+          setTimeout(() => isKicking = false, 1000);
+        }, 4000)
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      mixer.update(clock.getDelta());
+      renderer.render(scene, camera);
+    }
+
+    animate();
+    boxingAction.play();
+}
+    </script>
+  <header>
+    <nav>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About Me</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+  <div class="content">
+    <section id="home">
+      <div id='avatar-container'>
+        <div id='avatar-loading'></div>
+      </div>
+      <h1 class="hero-title">Hi there 👋</h1>
+      <h1>I'm <span class='gradient-text'>Seif Mansour</span></h1>
+      <p>I'm web developer who's still figuring shit out .</p>
+    </section>
+  </div>
+</body>
+
+
+</html>
