@@ -119,7 +119,7 @@ window.onload = () => loadModel();
 
 function loadModel() {
   const loader = new GLTFLoader();
-  loader.load('https://github.com/MansourSeif/Portfolio/avatar.glb',
+  loader.load('https://raw.githubusercontent.com/MansourSeif/Portfolio/main/avatar.glb',
     (gltf) => {
       setupScene(gltf);
       document.getElementById('avatar-loading').style.display = 'none';
